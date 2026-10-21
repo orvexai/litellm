@@ -1592,7 +1592,6 @@ async def new_team(
             is_audit_logging_enabled,
         )
         from litellm.proxy.proxy_server import (
-            _license_check,
             create_audit_log_for_update,
             general_settings,
             litellm_proxy_admin_name,
@@ -1657,14 +1656,6 @@ async def new_team(
             user_api_key_dict=user_api_key_dict,
             entity="team",
         )
-
-        # Check if license is over limit
-        total_teams: Final = await _team_db(prisma_client).count()
-        if total_teams and _license_check.is_team_count_over_limit(team_count=total_teams):
-            raise HTTPException(
-                status_code=403,
-                detail="License is over limit. Please contact support@berri.ai to upgrade your license.",
-            )
 
         if data.team_id is None:
             data.team_id = str(uuid.uuid4())
