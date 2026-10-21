@@ -64,7 +64,6 @@ from litellm.litellm_core_utils.url_utils import (
 from litellm.llms.anthropic.common_utils import ANTHROPIC_OAUTH_FORWARD_PROVIDERS
 from litellm.proxy._types import (
     AddTeamCallback,
-    CommonProxyErrors,
     LitellmDataForBackendLLMCall,
     LiteLLMRoutes,
     LitellmUserRoles,
@@ -3735,11 +3734,6 @@ def _enforced_params_check(
     )
     if enforced_params is None:
         return True
-    if enforced_params and premium_user is not True:
-        raise ValueError(
-            f"Enforced Params is an Enterprise feature. Enforced Params: {enforced_params}. {CommonProxyErrors.not_premium_user.value}"
-        )
-
     for enforced_param in enforced_params:
         _enforced_params = enforced_param.split(".")
         if len(_enforced_params) == 1:
@@ -3780,7 +3774,6 @@ def add_guardrails_from_key_or_team_metadata(
         project_metadata: The project metadata dictionary to check for guardrails
 
     """
-    from litellm.proxy.utils import premium_user_check
 
     # Initialize guardrails set (avoiding duplicates)
     combined_guardrails: Final = set()
@@ -3788,19 +3781,16 @@ def add_guardrails_from_key_or_team_metadata(
     # Add key-level guardrails first
     if key_metadata and "guardrails" in key_metadata:
         if isinstance(key_metadata["guardrails"], list) and len(key_metadata["guardrails"]) > 0:
-            premium_user_check()
             combined_guardrails.update(key_metadata["guardrails"])
 
     # Add team-level guardrails (set automatically handles duplicates)
     if team_metadata and "guardrails" in team_metadata:
         if isinstance(team_metadata["guardrails"], list) and len(team_metadata["guardrails"]) > 0:
-            premium_user_check()
             combined_guardrails.update(team_metadata["guardrails"])
 
     # Add project-level guardrails (set automatically handles duplicates)
     if project_metadata and "guardrails" in project_metadata:
         if isinstance(project_metadata["guardrails"], list) and len(project_metadata["guardrails"]) > 0:
-            premium_user_check()
             combined_guardrails.update(project_metadata["guardrails"])
 
     # Set combined guardrails in metadata as list
@@ -3836,7 +3826,6 @@ def _add_guardrails_from_policies_in_metadata(
     from litellm._logging import verbose_proxy_logger
     from litellm.proxy.policy_engine.policy_registry import get_policy_registry
     from litellm.proxy.policy_engine.policy_resolver import PolicyResolver
-    from litellm.proxy.utils import premium_user_check
     from litellm.types.proxy.policy_engine import PolicyMatchContext
 
     # Collect policy names from key and team metadata
@@ -3845,19 +3834,16 @@ def _add_guardrails_from_policies_in_metadata(
     # Add key-level policies first
     if key_metadata and "policies" in key_metadata:
         if isinstance(key_metadata["policies"], list) and len(key_metadata["policies"]) > 0:
-            premium_user_check()
             policy_names.update(key_metadata["policies"])
 
     # Add team-level policies
     if team_metadata and "policies" in team_metadata:
         if isinstance(team_metadata["policies"], list) and len(team_metadata["policies"]) > 0:
-            premium_user_check()
             policy_names.update(team_metadata["policies"])
 
     # Add project-level policies
     if project_metadata and "policies" in project_metadata:
         if isinstance(project_metadata["policies"], list) and len(project_metadata["policies"]) > 0:
-            premium_user_check()
             policy_names.update(project_metadata["policies"])
 
     if not policy_names:

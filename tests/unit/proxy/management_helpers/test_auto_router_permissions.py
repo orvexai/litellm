@@ -88,7 +88,7 @@ def catalog() -> Router:
         ({}, {"team_member_permissions": []}, True, False),
         ({}, {"team_member_permissions": None}, True, False),
         ({}, {"blocked": True}, True, False),
-        ({}, {}, False, False),
+        ({}, {}, False, True),
     ],
 )
 def test_opt_in_requires_live_named_membership_and_write_role(

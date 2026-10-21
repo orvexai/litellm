@@ -18,7 +18,7 @@ from typing import Final, Literal, Protocol
 from fastapi import HTTPException, status
 from pydantic import JsonValue, TypeAdapter
 
-from litellm.proxy._types import CommonProxyErrors, UserAPIKeyAuth
+from litellm.proxy._types import UserAPIKeyAuth
 from litellm.types.llms.base import LiteLLMBaseModel
 from litellm.types.proxy.management_endpoints.team_endpoints import (
     TeamMetadataFieldSchema,
@@ -109,13 +109,6 @@ async def run_team_metadata_validation(
     timeout_seconds: float,
     unavailable_message: str,
 ) -> None:
-    if premium_user is not True:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "error": f"custom_team_metadata_validate is an Enterprise feature. {CommonProxyErrors.not_premium_user.value}"
-            },
-        )
     if not inspect.iscoroutinefunction(validator):
         validator_call: Final = getattr(validator, "__call__", None)  # noqa: B004  # value unwrap for the functor check
         if not inspect.iscoroutinefunction(validator_call):

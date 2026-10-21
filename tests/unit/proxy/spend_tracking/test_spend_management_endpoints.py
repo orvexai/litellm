@@ -6952,26 +6952,6 @@ def test_org_spend_report_no_org_400(client, monkeypatch):
 
 
 @pytest.mark.parametrize("path", _SCOPED_SPEND_REPORT_PATHS)
-def test_scoped_spend_report_not_premium_403(client, monkeypatch, path):
-    mock_prisma = _spend_report_mock_prisma()
-    monkeypatch.setattr("litellm.proxy.proxy_server.prisma_client", mock_prisma)
-    monkeypatch.setattr("litellm.proxy.proxy_server.premium_user", False)
-    app.dependency_overrides[ps.user_api_key_auth] = lambda: UserAPIKeyAuth(
-        user_role=LitellmUserRoles.PROXY_ADMIN, user_id="admin", api_key="hashed-admin"
-    )
-    try:
-        response = client.get(
-            path,
-            params={"start_date": "2026-07-01", "end_date": "2026-07-31"},
-            headers={"Authorization": "Bearer sk-test"},
-        )
-        assert response.status_code == 403
-        mock_prisma.db.query_raw.assert_not_awaited()
-    finally:
-        app.dependency_overrides.pop(ps.user_api_key_auth, None)
-
-
-@pytest.mark.parametrize("path", _SCOPED_SPEND_REPORT_PATHS)
 def test_scoped_spend_report_missing_dates_400(client, monkeypatch, path):
     mock_prisma = _spend_report_mock_prisma()
     monkeypatch.setattr("litellm.proxy.proxy_server.prisma_client", mock_prisma)

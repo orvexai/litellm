@@ -123,7 +123,6 @@ class AzureBlobStorageLogger(CustomBatchLogger):
             Raises a NON Blocking verbose_logger.exception if an error occurs
         """
         try:
-            self._premium_user_check()
             verbose_logger.debug(
                 "AzureBlobStorageLogger: Logging - Enters logging function for model %s",
                 kwargs,
@@ -146,7 +145,6 @@ class AzureBlobStorageLogger(CustomBatchLogger):
             Raises a NON Blocking verbose_logger.exception if an error occurs
         """
         try:
-            self._premium_user_check()
             verbose_logger.debug(
                 "AzureBlobStorageLogger: Logging - Enters logging function for model %s",
                 kwargs,
@@ -350,17 +348,6 @@ class AzureBlobStorageLogger(CustomBatchLogger):
                 verbose_logger.debug("Azure AD token is expired. Requesting new token")
                 return True
         return False
-
-    def _premium_user_check(self):
-        """
-        Checks if the user is a premium user, raises an error if not
-        """
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
-
-        if premium_user is not True:
-            raise ValueError(
-                f"AzureBlobStorageLogger is only available for premium users. {CommonProxyErrors.not_premium_user}"
-            )
 
     async def get_service_client(self):
         from azure.storage.filedatalake.aio import DataLakeServiceClient

@@ -1514,7 +1514,7 @@ async def get_global_spend_report(
     start_date_obj: Final = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     end_date_obj: Final = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
-    from litellm.proxy.proxy_server import premium_user, prisma_client
+    from litellm.proxy.proxy_server import prisma_client
 
     try:
         if prisma_client is None:
@@ -1522,9 +1522,6 @@ async def get_global_spend_report(
                 "Database not connected. Connect a database to your proxy - https://docs.litellm.ai/docs/simple_proxy#managing-auth---virtual-keys"
             )
 
-        if premium_user is not True:
-            verbose_proxy_logger.debug("accessing /spend/report but not a premium user")
-            raise ValueError("/spend/report endpoint " + CommonProxyErrors.not_premium_user.value)
         db_response: Sequence[Mapping[str, object]] | None
         if api_key is not None:
             verbose_proxy_logger.debug("Getting /spend for api_key: [set=%s]", api_key is not None)
@@ -1830,17 +1827,12 @@ _ORG_SPEND_REPORT_SQL = """
 
 
 def _spend_report_prereqs() -> PrismaClient:
-    from litellm.proxy.proxy_server import premium_user, prisma_client
+    from litellm.proxy.proxy_server import prisma_client
 
     if prisma_client is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=CommonProxyErrors.db_not_connected_error.value,
-        )
-    if premium_user is not True:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="/spend/report endpoint " + CommonProxyErrors.not_premium_user.value,
         )
     return prisma_client
 

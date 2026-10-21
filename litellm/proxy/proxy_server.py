@@ -2764,7 +2764,7 @@ def configured_max_request_size_mb() -> int | float | None:
 
 app.add_middleware(
     RequestBodyDecompressionMiddleware,
-    get_max_request_size_mb=lambda: configured_max_request_size_mb() if premium_user is True else None,
+    get_max_request_size_mb=configured_max_request_size_mb,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -7116,11 +7116,6 @@ class ProxyConfig:
             ## ADMIN UI ACCESS ##
             ui_access_mode = general_settings.get("ui_access_mode", "all")  # can be either ["admin_only" or "all"]
             ### ALLOWED IP ###
-            allowed_ips: Final = general_settings.get("allowed_ips", None)
-            if allowed_ips is not None and premium_user is False:
-                raise ValueError(
-                    "allowed_ips is an Enterprise Feature. Please add a valid LITELLM_LICENSE to your envionment."
-                )
             ## BUDGET RESCHEDULER ##
             proxy_budget_rescheduler_min_time = general_settings.get(
                 "proxy_budget_rescheduler_min_time", proxy_budget_rescheduler_min_time
@@ -7170,10 +7165,6 @@ class ProxyConfig:
 
             ### SSRF URL VALIDATION SETTINGS ###
             _apply_ssrf_general_settings(general_settings)
-
-            ## check if user has set a premium feature in general_settings
-            if general_settings.get("enforced_params") is not None and premium_user is not True:
-                raise ValueError("Trying to use `enforced_params`" + CommonProxyErrors.not_premium_user.value)
 
             # check if litellm_license in general_settings
             if "litellm_license" in general_settings:
@@ -7387,8 +7378,6 @@ class ProxyConfig:
         ## WORKER REGISTRY (Global Control Plane)
         worker_registry_config: Final = config.get("worker_registry", None)
         if worker_registry_config:
-            if premium_user is not True:
-                raise ValueError("Trying to use `worker_registry`" + CommonProxyErrors.not_premium_user.value)
             self.worker_registry = [WorkerRegistryEntry(**e) for e in worker_registry_config]
         else:
             self.worker_registry = []
@@ -21533,7 +21522,7 @@ app.router.routes = hot_routes_first(app.router.routes)
 app.add_middleware(
     RequestSizeLimitMiddleware,
     get_max_request_size_mb=configured_max_request_size_mb,
-    is_request_size_limit_enabled=lambda: premium_user is True,
+    is_request_size_limit_enabled=lambda: True,
 )
 app.add_middleware(
     AdmissionControlMiddleware,

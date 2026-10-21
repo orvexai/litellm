@@ -440,7 +440,7 @@ def _running_jwt_handler(litellm_jwtauth: LiteLLM_JWTAuth | None) -> JWTHandler:
         ({"enable_jwt_auth": True}, object(), True, None, False),
         ({}, object(), True, LiteLLM_JWTAuth(id_jag_requesting_apps=[PUBLIC_APP]), False),
         ({"enable_jwt_auth": True}, None, True, LiteLLM_JWTAuth(id_jag_requesting_apps=[PUBLIC_APP]), False),
-        ({"enable_jwt_auth": True}, object(), False, LiteLLM_JWTAuth(id_jag_requesting_apps=[PUBLIC_APP]), False),
+        ({"enable_jwt_auth": True}, object(), False, LiteLLM_JWTAuth(id_jag_requesting_apps=[PUBLIC_APP]), True),
     ],
 )
 def test_availability_is_read_from_the_running_proxy(

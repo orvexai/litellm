@@ -13,6 +13,18 @@ spec:
       description: Image repository without a tag, for example ghcr.io/orvexai/litellm
     - name: tag
       type: string
+    - name: deploy
+      type: string
+      default: "false"
+    - name: release
+      type: string
+      default: litellm
+    - name: namespace
+      type: string
+      default: litellm
+    - name: chart
+      type: string
+      default: helm/litellm-helm
   workspaces:
     - name: source
     - name: registry-credentials
@@ -98,3 +110,57 @@ spec:
                 --local dockerfile=. \
                 --opt target=runtime \
                 --output "type=image,name=${IMAGE}:${TAG},push=true"
+    - name: deploy
+      runAfter: [build-and-push]
+      when:
+        - input: $(params.deploy)
+          operator: in
+          values: ["true"]
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: image
+          value: $(params.image)
+        - name: tag
+          value: $(params.tag)
+        - name: release
+          value: $(params.release)
+        - name: namespace
+          value: $(params.namespace)
+        - name: chart
+          value: $(params.chart)
+      taskSpec:
+        params:
+          - name: image
+          - name: tag
+          - name: release
+          - name: namespace
+          - name: chart
+        workspaces:
+          - name: source
+        steps:
+          - name: helm-upgrade
+            image: alpine/helm:3.17.1
+            workingDir: $(workspaces.source.path)
+            env:
+              - name: IMAGE
+                value: $(params.image)
+              - name: TAG
+                value: $(params.tag)
+              - name: RELEASE
+                value: $(params.release)
+              - name: NAMESPACE
+                value: $(params.namespace)
+              - name: CHART
+                value: $(params.chart)
+            script: |
+              #!/bin/sh
+              set -eu
+              helm upgrade --install "$RELEASE" "$CHART" \
+                --namespace "$NAMESPACE" \
+                --reuse-values \
+                --set image.repository="$IMAGE" \
+                --set image.tag="$TAG" \
+                --atomic \
+                --timeout 15m

@@ -412,15 +412,13 @@ class TestModelManagementAuthChecks:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_can_user_make_team_model_call_non_premium_fails(self):
-        """Test that non-premium users cannot make team model calls"""
-        with pytest.raises(Exception, match="You must be a LiteLLM Enterprise user to use this feature\\.") as exc_info:
-            ModelManagementAuthChecks.can_user_make_team_model_call(
-                team_id="test_team",
-                user_api_key_dict=self.admin_user,
-                premium_user=False,
-            )
-        assert "403" in str(exc_info.value)
+    async def test_can_user_make_team_model_call_without_a_license(self):
+        result = ModelManagementAuthChecks.can_user_make_team_model_call(
+            team_id="test_team",
+            user_api_key_dict=self.admin_user,
+            premium_user=False,
+        )
+        assert result is True
 
     @pytest.mark.asyncio
     async def test_can_user_make_team_model_call_team_admin_success(self):
@@ -458,8 +456,7 @@ class TestModelManagementAuthChecks:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_allow_team_model_action_non_premium_fails(self):
-        """Test team model action fails for non-premium users"""
+    async def test_allow_team_model_action_without_a_license(self):
         model_params = Deployment(
             model_name="test_model",
             litellm_params=LiteLLM_Params(model="test_model", team_id="test_team"),
@@ -467,14 +464,13 @@ class TestModelManagementAuthChecks:
         )
         prisma_client = MockPrismaClient(team_exists=True)
 
-        with pytest.raises(Exception, match="You must be a LiteLLM Enterprise user to use this feature\\.") as exc_info:
-            await ModelManagementAuthChecks.allow_team_model_action(
-                model_params=model_params,
-                user_api_key_dict=self.admin_user,
-                prisma_client=prisma_client,
-                premium_user=False,
-            )
-        assert "403" in str(exc_info.value)
+        result = await ModelManagementAuthChecks.allow_team_model_action(
+            model_params=model_params,
+            user_api_key_dict=self.admin_user,
+            prisma_client=prisma_client,
+            premium_user=False,
+        )
+        assert result is True
 
     @pytest.mark.asyncio
     async def test_allow_team_model_action_nonexistent_team_fails(self):

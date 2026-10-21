@@ -12,7 +12,6 @@ from litellm.models.organization import LiteLLM_OrganizationTable
 from litellm.models.project import LiteLLM_ProjectTable
 from litellm.proxy._types import (
     UI_TEAM_ID,
-    CommonProxyErrors,
     KeyManagementRoutes,
     LiteLLM_TeamMembership,
     LiteLLM_TeamTable,
@@ -115,8 +114,6 @@ class MemberAutoRouterDependencyObjects:
 def authorize_member_auto_router_team(
     *, user_api_key_dict: UserAPIKeyAuth, team: LiteLLM_TeamTable, premium_user: bool
 ) -> None:
-    if not premium_user:
-        raise HTTPException(status_code=403, detail=CommonProxyErrors.not_premium_user.value)
     if (
         user_api_key_dict.user_role
         not in (LitellmUserRoles.INTERNAL_USER, LitellmUserRoles.TEAM, LitellmUserRoles.ORG_ADMIN)

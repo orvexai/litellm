@@ -27,8 +27,6 @@ CYBERARK_POLICY_LOAD_RETRY_DELAY_SECONDS: Final = 0.2
 
 class CyberArkSecretManager(BaseSecretManager):
     def __init__(self):
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
-
         # CyberArk Conjur-specific config
         self.conjur_addr = os.getenv("CYBERARK_API_BASE", "http://127.0.0.1:8080")
         self.conjur_account = os.getenv("CYBERARK_ACCOUNT", "default")
@@ -57,11 +55,6 @@ class CyberArkSecretManager(BaseSecretManager):
         # Tokens expire after ~8 minutes, so we cache for 5 minutes to be safe
         _refresh_interval: Final = int(os.environ.get("CYBERARK_REFRESH_INTERVAL", "300"))
         self.cache = InMemoryCache(default_ttl=_refresh_interval)
-
-        if premium_user is not True:
-            raise ValueError(
-                f"CyberArk secret manager is only available for premium users. {CommonProxyErrors.not_premium_user.value}"
-            )
 
         if not self.ssl_verify:
             verbose_logger.warning(

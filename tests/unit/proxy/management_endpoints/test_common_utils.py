@@ -242,26 +242,6 @@ class TestUpdateMetadataFieldsEmptyCollections:
         mock_premium_check.assert_not_called()
 
     @patch("litellm.proxy.management_endpoints.common_utils.premium_user_check")
-    def test_non_empty_list_triggers_premium_check(self, mock_premium_check):
-        """Non-empty lists for premium fields should trigger the premium check."""
-        updated_kv = {
-            "team_id": "test-team",
-            "guardrails": ["my-guardrail"],
-        }
-        update_metadata_fields(updated_kv=updated_kv)
-        mock_premium_check.assert_called()
-
-    @patch("litellm.proxy.management_endpoints.common_utils.premium_user_check")
-    def test_non_empty_value_triggers_premium_check(self, mock_premium_check):
-        """Non-empty string values for premium fields should trigger the premium check."""
-        updated_kv = {
-            "team_id": "test-team",
-            "tags": ["production"],
-        }
-        update_metadata_fields(updated_kv=updated_kv)
-        mock_premium_check.assert_called()
-
-    @patch("litellm.proxy.management_endpoints.common_utils.premium_user_check")
     def test_non_empty_list_updates_metadata(self, mock_premium_check):
         """Non-empty lists should be moved into metadata."""
         updated_kv = {
@@ -292,11 +272,10 @@ class TestUpdateMetadataFieldsEmptyCollections:
         assert updated_kv["metadata"]["disable_global_guardrails"] is False
 
     @patch("litellm.proxy.management_endpoints.common_utils.premium_user_check")
-    def test_true_boolean_triggers_premium_check(self, mock_premium_check):
-        """Control: enabling the premium feature (True) still requires a license."""
+    def test_true_boolean_is_moved_into_metadata(self, mock_premium_check):
         updated_kv = {"team_id": "test-team", "disable_global_guardrails": True}
         update_metadata_fields(updated_kv=updated_kv)
-        mock_premium_check.assert_called()
+        assert updated_kv["metadata"]["disable_global_guardrails"] is True
 
     @patch("litellm.proxy.management_endpoints.common_utils.premium_user_check")
     def test_ui_typical_payload_does_not_trigger_premium_check(
@@ -552,25 +531,15 @@ class TestSetObjectMetadataField:
     """Tests for _set_object_metadata_field function."""
 
     @pytest.mark.parametrize(
-        "field_name,value,should_call_premium",
+        "field_name,value",
         [
-            ("guardrails", ["g1"], True),
-            ("model_rpm_limit", {"gpt-4": 10}, False),
+            ("guardrails", ["g1"]),
+            ("model_rpm_limit", {"gpt-4": 10}),
         ],
     )
-    def test_set_object_metadata_field_parametrized(
-        self, field_name, value, should_call_premium
-    ):
-        """Parametrized test: premium fields trigger _premium_user_check."""
+    def test_set_object_metadata_field_parametrized(self, field_name, value):
         team = LiteLLM_TeamTable(team_id="t1", metadata={})
-        with patch(
-            "litellm.proxy.management_endpoints.common_utils.premium_user_check"
-        ) as mock_premium:
-            set_object_metadata_field(team, field_name, value)
-            if should_call_premium:
-                mock_premium.assert_called_once()
-            else:
-                mock_premium.assert_not_called()
+        set_object_metadata_field(team, field_name, value)
         assert team.metadata[field_name] == value
 
     def test_set_object_metadata_field_initializes_metadata_if_none(self):
@@ -1297,16 +1266,6 @@ class TestTeamAdminCanInviteUserQuery:
         find_many.assert_awaited_once_with(where={"team_id": {"in": ["t1", "t2"]}})
 
 
-class TestSetObjectMetadataFieldPremiumArg:
-    def test_premium_check_receives_the_field_name(self):
-        team = LiteLLM_TeamTable(team_id="t1", metadata={})
-        with patch(
-            "litellm.proxy.management_endpoints.common_utils.premium_user_check"
-        ) as mock_premium:
-            set_object_metadata_field(team, "guardrails", ["g1"])
-            mock_premium.assert_called_once_with("guardrails")
-
-
 class TestUpdateMetadataFieldMove:
     def test_none_valued_field_is_not_moved_into_metadata(self):
         """A None value must leave the field untouched (guard requires non-None)."""
@@ -1431,43 +1390,19 @@ class TestUpdateMetadataFieldsPremiumCheck:
         update_metadata_fields(updated_kv)
         mock_check.assert_not_called()
 
-    @patch(
-        "litellm.proxy.management_endpoints.common_utils.premium_user_check",
-    )
-    def test_non_empty_policies_triggers_premium_check(self, mock_check):
-        """policies: ['real-policy'] SHOULD trigger premium user check."""
+    def test_non_empty_premium_fields_are_moved_into_metadata_without_a_license(self):
         updated_kv = {
             "team_id": "team-123",
             "policies": ["real-policy"],
-        }
-        update_metadata_fields(updated_kv)
-        mock_check.assert_called()
-
-    @patch(
-        "litellm.proxy.management_endpoints.common_utils.premium_user_check",
-    )
-    def test_non_empty_guardrails_triggers_premium_check(self, mock_check):
-        """guardrails: ['my-guardrail'] SHOULD trigger premium user check."""
-        updated_kv = {
-            "team_id": "team-123",
             "guardrails": ["my-guardrail"],
-        }
-        update_metadata_fields(updated_kv)
-        mock_check.assert_called()
-
-    @patch(
-        "litellm.proxy.management_endpoints.common_utils.premium_user_check",
-    )
-    def test_non_empty_team_member_key_duration_triggers_premium_check(
-        self, mock_check
-    ):
-        """team_member_key_duration: '30d' SHOULD trigger premium user check."""
-        updated_kv = {
-            "team_id": "team-123",
             "team_member_key_duration": "30d",
         }
         update_metadata_fields(updated_kv)
-        mock_check.assert_called()
+        assert updated_kv["metadata"] == {
+            "policies": ["real-policy"],
+            "guardrails": ["my-guardrail"],
+            "team_member_key_duration": "30d",
+        }
 
 
 @pytest.mark.asyncio
@@ -1547,13 +1482,11 @@ def test_validate_team_model_max_budget_accepts_a_zero_cap_and_prefixed_models()
     )
 
 
-def test_validate_team_model_max_budget_is_license_gated_only_when_set() -> None:
+def test_validate_team_model_max_budget_accepts_a_valid_cap_without_a_license() -> None:
     from litellm.proxy.management_endpoints.common_utils import validate_team_model_max_budget
 
     validate_team_model_max_budget(model_max_budget=None, premium_user=False)
     validate_team_model_max_budget(model_max_budget={}, premium_user=False)
-    with pytest.raises(HTTPException) as exc:
-        validate_team_model_max_budget(
-            model_max_budget={"gpt-4o": BudgetConfig(max_budget=1.0, budget_duration="1d")}, premium_user=False
-        )
-    assert exc.value.status_code == 403
+    validate_team_model_max_budget(
+        model_max_budget={"gpt-4o": BudgetConfig(max_budget=1.0, budget_duration="1d")}, premium_user=False
+    )

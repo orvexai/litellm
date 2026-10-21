@@ -44,10 +44,6 @@ class GcsPubSubLogger(CustomBatchLogger):
             topic_id (str): Pub/Sub topic ID
             credentials_path (str, optional): Path to Google Cloud credentials JSON file
         """
-        from litellm.proxy.utils import premium_user_check
-
-        premium_user_check()
-
         self.async_httpx_client = get_async_httpx_client(llm_provider=httpxSpecialProvider.LoggingCallback)
 
         self.project_id = project_id or os.getenv("GCS_PUBSUB_PROJECT_ID")
@@ -107,10 +103,6 @@ class GcsPubSubLogger(CustomBatchLogger):
         from litellm.proxy.spend_tracking.spend_tracking_utils import (
             get_logging_payload,
         )
-        from litellm.proxy.utils import premium_user_check
-
-        premium_user_check()
-
         try:
             verbose_logger.debug("PubSub: Logging - Enters logging function for model %s", kwargs)
             standard_logging_payload: Final = kwargs.get("standard_logging_object", None)

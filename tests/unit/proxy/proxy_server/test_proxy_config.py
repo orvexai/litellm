@@ -28,7 +28,7 @@ from prisma.errors import DataError
 from pydantic import JsonValue, TypeAdapter, ValidationError
 
 import litellm
-from litellm.proxy._types import CommonProxyErrors, ConfigGeneralSettings
+from litellm.proxy._types import ConfigGeneralSettings
 from litellm.proxy.common_utils.encrypt_decrypt_utils import encrypt_value_helper
 from litellm.types.router import Deployment, LiteLLM_Params
 from litellm.proxy.proxy_server import (
@@ -2856,18 +2856,16 @@ async def test_ProxyConfig__init_non_llm_configs_premium_invalid_worker_registry
 
 
 @pytest.mark.asyncio
-async def test_ProxyConfig__init_non_llm_configs_worker_registry_requires_premium(monkeypatch):
+async def test_ProxyConfig__init_non_llm_configs_worker_registry_loads_without_a_license(monkeypatch):
     monkeypatch.setattr("litellm.proxy.proxy_server.premium_user", False)
     pc = ProxyConfig()
-    with pytest.raises(ValueError, match="Trying to use `worker_registry`You must be a LiteLLM") as exc_info:
-        await pc._init_non_llm_configs(
-            config={"worker_registry": [{"worker_id": "worker-a", "name": "Worker A", "url": "http://localhost:4001"}]},
-            config_file_path=None,
-        )
-    message = str(exc_info.value)
-    assert "worker_registry" in message
-    assert CommonProxyErrors.not_premium_user.value in message
-    assert pc.worker_registry == []
+    await pc._init_non_llm_configs(
+        config={"worker_registry": [{"worker_id": "worker-a", "name": "Worker A", "url": "http://localhost:4001"}]},
+        config_file_path=None,
+    )
+    assert [(w.worker_id, w.name, w.url) for w in pc.worker_registry] == [
+        ("worker-a", "Worker A", "http://localhost:4001")
+    ]
 
 
 @pytest.mark.asyncio

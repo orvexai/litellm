@@ -40,6 +40,8 @@ spec:
       value: $(body.after)
     - name: tag
       value: $(extensions.short_sha)
+    - name: deploy
+      value: $(extensions.deploy)
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
@@ -50,6 +52,7 @@ spec:
     - name: repo-url
     - name: revision
     - name: tag
+    - name: deploy
   resourcetemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
@@ -67,6 +70,10 @@ spec:
             value: ghcr.io/orvexai/litellm
           - name: tag
             value: $(tt.params.tag)
+          - name: deploy
+            value: $(tt.params.deploy)
+        taskRunTemplate:
+          serviceAccountName: litellm-deployer
         workspaces:
           - name: source
             volumeClaimTemplate:
@@ -105,6 +112,8 @@ spec:
           overlays:
             - key: short_sha
               expression: "body.after.truncate(12)"
+            - key: deploy
+              expression: "body.ref == 'refs/heads/main' ? 'true' : 'false'"
       bindings:
         - ref: litellm-github-push
       template:

@@ -17232,14 +17232,8 @@ async def test_new_team_persists_model_max_budget(mock_db_client, mock_admin_aut
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("endpoint_name", ["new", "update"])
-@pytest.mark.parametrize(
-    ("premium_user", "model_budget", "expected_status"),
-    [
-        (False, {"gpt-4o": {"max_budget": 10.0, "budget_duration": "1d"}}, 403),
-        (True, {"gpt-4o": {"max_budget": 10.0}}, 400),
-    ],
-)
-async def test_team_member_model_budget_validation(endpoint_name, premium_user, model_budget, expected_status):
+async def test_team_member_model_budget_validation(endpoint_name):
+    model_budget: Final = {"gpt-4o": {"max_budget": 10.0}}
     from fastapi import Request
 
     from litellm.proxy._types import NewTeamRequest, ProxyException, UpdateTeamRequest
@@ -17259,7 +17253,6 @@ async def test_team_member_model_budget_validation(endpoint_name, premium_user, 
 
     with (
         patch("litellm.proxy.proxy_server.prisma_client", MagicMock()),
-        patch("litellm.proxy.proxy_server.premium_user", premium_user),
         pytest.raises(ProxyException) as exc_info,
     ):
         await endpoint(
@@ -17268,7 +17261,7 @@ async def test_team_member_model_budget_validation(endpoint_name, premium_user, 
             user_api_key_dict=UserAPIKeyAuth(user_role=LitellmUserRoles.PROXY_ADMIN, user_id="admin"),
         )
 
-    assert exc_info.value.code == str(expected_status)
+    assert exc_info.value.code == "400"
 
 
 @pytest.mark.asyncio

@@ -553,12 +553,12 @@ async def test_drain_timeout_warning_names_each_dropped_audit_row():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("store_audit_logs", "premium_user", "expected_write_count"),
-    [(True, True, 1), (False, True, 0), (True, False, 0)],
-    ids=["row_written", "logging_disabled", "not_premium"],
+    ("store_audit_logs", "expected_write_count"),
+    [(True, 1), (False, 0)],
+    ids=["row_written", "logging_disabled"],
 )
 async def test_drain_does_not_wait_for_code_that_runs_after_an_inline_audit_write(
-    store_audit_logs: bool, premium_user: bool, expected_write_count: int
+    store_audit_logs: bool, expected_write_count: int
 ):
     release_caller: Final = asyncio.Event()
     mock_prisma: Final = MagicMock()
@@ -582,7 +582,6 @@ async def test_drain_does_not_wait_for_code_that_runs_after_an_inline_audit_writ
 
     with (
         patch("litellm.store_audit_logs", store_audit_logs),
-        patch("litellm.proxy.proxy_server.premium_user", premium_user),
         patch("litellm.proxy.proxy_server.prisma_client", mock_prisma),
     ):
         caller: Final = asyncio.create_task(_caller_that_outlives_the_audit_call())
