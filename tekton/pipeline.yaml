@@ -1,0 +1,100 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: litellm-build
+spec:
+  params:
+    - name: repo-url
+      type: string
+    - name: revision
+      type: string
+    - name: image
+      type: string
+      description: Image repository without a tag, for example ghcr.io/orvexai/litellm
+    - name: tag
+      type: string
+  workspaces:
+    - name: source
+    - name: registry-credentials
+      description: Holds a docker config.json used to push the image
+  tasks:
+    - name: clone
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: repo-url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+      taskSpec:
+        params:
+          - name: repo-url
+          - name: revision
+        workspaces:
+          - name: source
+        steps:
+          - name: clone
+            image: alpine/git:2.47.2
+            workingDir: $(workspaces.source.path)
+            env:
+              - name: REPO_URL
+                value: $(params.repo-url)
+              - name: REVISION
+                value: $(params.revision)
+            script: |
+              #!/bin/sh
+              set -eu
+              git init .
+              git remote add origin "$REPO_URL"
+              git fetch --depth=1 origin "$REVISION"
+              git checkout --detach FETCH_HEAD
+    - name: build-and-push
+      runAfter: [clone]
+      workspaces:
+        - name: source
+          workspace: source
+        - name: registry-credentials
+          workspace: registry-credentials
+      params:
+        - name: image
+          value: $(params.image)
+        - name: tag
+          value: $(params.tag)
+      taskSpec:
+        params:
+          - name: image
+          - name: tag
+        workspaces:
+          - name: source
+          - name: registry-credentials
+        steps:
+          - name: build
+            image: moby/buildkit:v0.23.2-rootless
+            workingDir: $(workspaces.source.path)
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              seccompProfile:
+                type: Unconfined
+            env:
+              - name: BUILDKITD_FLAGS
+                value: --oci-worker-no-process-sandbox
+              - name: DOCKER_CONFIG
+                value: $(workspaces.registry-credentials.path)
+              - name: XDG_RUNTIME_DIR
+                value: /home/user/.local/tmp
+              - name: IMAGE
+                value: $(params.image)
+              - name: TAG
+                value: $(params.tag)
+            script: |
+              #!/bin/sh
+              set -eu
+              mkdir -p "$XDG_RUNTIME_DIR"
+              buildctl-daemonless.sh build \
+                --frontend dockerfile.v0 \
+                --local context=. \
+                --local dockerfile=. \
+                --opt target=runtime \
+                --output "type=image,name=${IMAGE}:${TAG},push=true"
