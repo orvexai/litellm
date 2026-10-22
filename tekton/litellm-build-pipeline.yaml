@@ -31,8 +31,10 @@ spec:
       description: Pin the built tag in my-idp when "true"
   results:
     - name: IMAGE_DIGEST
+      description: ""
       value: $(tasks.build-and-push.results.IMAGE_DIGEST)
     - name: IMAGE_URL
+      description: ""
       value: $(tasks.build-and-push.results.IMAGE_URL)
   tasks:
     - name: clone-repo
@@ -83,7 +85,9 @@ spec:
       taskSpec:
         params:
           - name: tag
+            type: string
           - name: repository
+            type: string
         workspaces:
           - name: gitops-credentials
         steps:
