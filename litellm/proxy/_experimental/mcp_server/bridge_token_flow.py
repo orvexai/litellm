@@ -486,13 +486,12 @@ async def _resolve_jwt_auth(
     from litellm.proxy.proxy_server import (  # noqa: PLC0415  # proxy globals initialized at startup
         general_settings,
         jwt_handler,
-        premium_user,
         prisma_client,
         proxy_logging_obj,
         user_api_key_cache,
     )
 
-    if general_settings.get("enable_jwt_auth") is not True or premium_user is not True or prisma_client is None:
+    if general_settings.get("enable_jwt_auth") is not True or prisma_client is None:
         return None
     try:
         if jwt_handler.litellm_jwtauth.is_virtual_key_mapping_configured():

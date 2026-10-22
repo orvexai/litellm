@@ -2576,25 +2576,10 @@ async def test_prepare_key_update_data_disable_global_guardrails_false_no_premiu
 
 
 @pytest.mark.asyncio
-async def test_prepare_key_update_data_disable_global_guardrails_true_requires_premium(
+async def test_prepare_key_update_data_disable_global_guardrails_true_persists_without_a_license(
     monkeypatch,
 ):
-    """Control: enabling the premium feature (True) without a license still 403s."""
     monkeypatch.setattr("litellm.proxy.proxy_server.premium_user", False)
-    data = UpdateKeyRequest(key="sk-1", disable_global_guardrails=True)
-    existing_key = LiteLLM_VerificationToken(token="hashed")
-
-    with pytest.raises(HTTPException) as exc_info:
-        await prepare_key_update_data(data=data, existing_key_row=existing_key)
-    assert exc_info.value.status_code == 403
-
-
-@pytest.mark.asyncio
-async def test_prepare_key_update_data_disable_global_guardrails_true_premium_persists(
-    monkeypatch,
-):
-    """A premium user enabling the feature (True) succeeds and the value persists."""
-    monkeypatch.setattr("litellm.proxy.proxy_server.premium_user", True)
     data = UpdateKeyRequest(key="sk-1", disable_global_guardrails=True)
     existing_key = LiteLLM_VerificationToken(token="hashed")
 
@@ -21330,37 +21315,6 @@ async def test_key_generation_organization_membership_error_precedes_project_own
 
     assert error.value.status_code == 403
     assert error.value.detail == "Caller is not a member of organization_id=org-not-member"
-
-
-@pytest.mark.asyncio
-async def test_key_generation_premium_permission_error_precedes_project_ownership(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    user_api_key_cache: Final = await _cache_with_project(
-        _OWNED_PROJECT, [], team_id=_OWNERSHIP_PROJECT_TEAM
-    )
-    mock_prisma_client: Final = _configure_key_endpoints(monkeypatch, user_api_key_cache)
-    monkeypatch.setattr(litellm, "default_key_generate_params", None)
-    monkeypatch.setattr("litellm.proxy.proxy_server.premium_user", False)
-
-    with pytest.raises(HTTPException) as error:
-        await _common_key_generation_helper(
-            data=GenerateKeyRequest(
-                project_id=_OWNED_PROJECT,
-                team_id=_OWNERSHIP_KEY_TEAM,
-                permissions={"get_spend_routes": True},
-            ),
-            user_api_key_dict=UserAPIKeyAuth(
-                user_role=LitellmUserRoles.PROXY_ADMIN,
-                api_key="sk-admin",
-            ),
-            litellm_changed_by=None,
-            team_table=None,
-        )
-
-    assert error.value.status_code == 500
-    assert error.value.detail == {"error": "Internal Server Error."}
-    mock_prisma_client.insert_data.assert_not_awaited()
 
 
 @pytest.mark.asyncio

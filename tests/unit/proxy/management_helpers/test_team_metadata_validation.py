@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 
 
-from litellm.proxy._types import CommonProxyErrors, LitellmUserRoles, UserAPIKeyAuth
+from litellm.proxy._types import LitellmUserRoles, UserAPIKeyAuth
 from litellm.proxy.management_helpers.team_metadata_validation import (
     DEFAULT_TEAM_METADATA_VALIDATION_REJECTED_MESSAGE,
     DEFAULT_TEAM_METADATA_VALIDATION_TIMEOUT_SECONDS,
@@ -126,17 +126,6 @@ async def test_malformed_return_shape_fails_closed():
         await _run(validator)
     assert exc_info.value.status_code == 503
     assert exc_info.value.detail == {"error": UNAVAILABLE_MESSAGE}
-
-
-@pytest.mark.asyncio
-async def test_non_premium_user_is_rejected():
-    async def validator(payload):
-        return TeamMetadataValidationResult(valid=True)
-
-    with pytest.raises(HTTPException) as exc_info:
-        await _run(validator, premium_user=False)
-    assert exc_info.value.status_code == 400
-    assert CommonProxyErrors.not_premium_user.value in exc_info.value.detail["error"]
 
 
 @pytest.mark.asyncio

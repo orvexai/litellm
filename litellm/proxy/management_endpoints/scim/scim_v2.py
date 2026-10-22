@@ -288,8 +288,7 @@ class GroupMemberExtractionResult(LiteLLMBaseModel):
 
 scim_router: Final = APIRouter(
     prefix="/scim/v2",
-    tags=["✨ SCIM v2 (Enterprise Only)"],
-    dependencies=[Depends(premium_user_check)],
+    tags=["SCIM v2"],
 )
 
 SCIM_MAX_PAGE_SIZE: Final = 100

@@ -85,13 +85,6 @@ def validate_team_model_max_budget(
     """Reject a team `model_max_budget` the limiter could not enforce (no duration, bad cap, tpm/rpm limits)."""
     if not model_max_budget:
         return
-    if premium_user is not True:
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": f"Setting model_max_budget on a team is an enterprise feature. {CommonProxyErrors.not_premium_user.value}"
-            },
-        )
     for model_name, budget_config in model_max_budget.items():
         if not model_name.strip():
             raise HTTPException(
@@ -546,9 +539,6 @@ def set_object_metadata_field(
         field_name: Name of the metadata field to set
         value: Value to set for the field
     """
-    if field_name in LiteLLM_ManagementEndpoint_MetadataFields_Premium and value:
-        premium_user_check(field_name)
-
     object_data.metadata = object_data.metadata or {}
     object_data.metadata[field_name] = value
 
@@ -783,14 +773,6 @@ def _update_metadata_field(updated_kv: dict, field_name: str) -> None:
         updated_kv: The key-value dict being used for the update
         field_name: Name of the metadata field being updated
     """
-    if field_name in LiteLLM_ManagementEndpoint_MetadataFields_Premium:
-        # The UI sends falsy defaults (False, [], {}) even when the user has not
-        # enabled any enterprise feature (see #20304, #30285); require a license
-        # only for a truthy value. The falsy value is still persisted below so a
-        # previously-set field can be cleared.
-        if updated_kv.get(field_name):
-            premium_user_check()
-
     if field_name in updated_kv and updated_kv[field_name] is not None:
         # remove field from updated_kv
         _value: Final = updated_kv.pop(field_name)

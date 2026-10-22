@@ -102,7 +102,6 @@ async def create_fine_tuning_job(
     from litellm.proxy.proxy_server import (
         general_settings,
         llm_router,
-        premium_user,
         proxy_config,
         proxy_logging_obj,
         version,
@@ -110,8 +109,6 @@ async def create_fine_tuning_job(
 
     data = fine_tuning_request.model_dump(exclude_none=True)
     try:
-        if premium_user is not True:
-            raise ValueError(f"Only premium users can use this endpoint + {CommonProxyErrors.not_premium_user.value}")
         # Convert Pydantic model to dict
 
         verbose_proxy_logger.debug(
@@ -254,7 +251,6 @@ async def retrieve_fine_tuning_job(
     from litellm.proxy.proxy_server import (
         general_settings,
         llm_router,
-        premium_user,
         proxy_config,
         proxy_logging_obj,
         version,
@@ -262,8 +258,6 @@ async def retrieve_fine_tuning_job(
 
     data: dict = {"fine_tuning_job_id": fine_tuning_job_id}
     try:
-        if premium_user is not True:
-            raise ValueError(f"Only premium users can use this endpoint + {CommonProxyErrors.not_premium_user.value}")
         await validate_managed_id_requirement(
             resource_id=fine_tuning_job_id,
             resource_kind="fine-tuning job",
@@ -408,7 +402,6 @@ async def list_fine_tuning_jobs(
     from litellm.proxy.proxy_server import (
         general_settings,
         llm_router,
-        premium_user,
         proxy_config,
         proxy_logging_obj,
         version,
@@ -416,8 +409,6 @@ async def list_fine_tuning_jobs(
 
     data: dict = {}
     try:
-        if premium_user is not True:
-            raise ValueError(f"Only premium users can use this endpoint + {CommonProxyErrors.not_premium_user.value}")
         # Include original request and headers in the data
         base_llm_response_processor: Final = ProxyBaseLLMRequestProcessing(data=data)
         (
@@ -529,7 +520,6 @@ async def cancel_fine_tuning_job(
     from litellm.proxy.proxy_server import (
         general_settings,
         llm_router,
-        premium_user,
         proxy_config,
         proxy_logging_obj,
         version,
@@ -537,8 +527,6 @@ async def cancel_fine_tuning_job(
 
     data: dict = {"fine_tuning_job_id": fine_tuning_job_id}
     try:
-        if premium_user is not True:
-            raise ValueError(f"Only premium users can use this endpoint + {CommonProxyErrors.not_premium_user.value}")
         await validate_managed_id_requirement(
             resource_id=fine_tuning_job_id,
             resource_kind="fine-tuning job",

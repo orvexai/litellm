@@ -12922,7 +12922,6 @@ async def test_oauth_exchange_stores_token_for_validated_jwt_user(
         "missing_user",
         "unknown_user",
         "disabled",
-        "not_premium",
         "scim_inactive",
         "custom_validate",
         "missing_database",
@@ -12960,8 +12959,6 @@ async def test_oauth_jwt_identity_rejects_untrusted_or_inactive_owner(
     )
     if rejection == "disabled":
         monkeypatch.setattr(proxy_server, "general_settings", {"enable_jwt_auth": False})
-    if rejection == "not_premium":
-        monkeypatch.setattr(proxy_server, "premium_user", False)
     if rejection == "missing_database":
         monkeypatch.setattr(proxy_server, "prisma_client", None)
     if rejection == "scim_inactive":

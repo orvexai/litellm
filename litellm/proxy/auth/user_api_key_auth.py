@@ -2231,17 +2231,6 @@ async def user_api_key_auth_builder(
             RouteChecks.is_llm_api_route(route=route) or RouteChecks.is_info_route(route=route) or route_is_lens
         )
         if (should_apply_global_oauth2 and not is_jwt) or should_apply_override_oauth2:
-            from litellm.proxy.proxy_server import premium_user
-
-            if premium_user is not True:
-                raise ProxyException(
-                    message="Oauth2 token validation is only available for premium users. "
-                    + CommonProxyErrors.not_premium_user.value,
-                    type=ProxyErrorTypes.auth_error,
-                    param="premium_user",
-                    code=status.HTTP_403_FORBIDDEN,
-                )
-
             return await Oauth2Handler.check_oauth2_token(token=api_key)
 
         if general_settings.get("enable_oauth2_proxy_auth", False) is True:
@@ -2251,15 +2240,6 @@ async def user_api_key_auth_builder(
             is_jwt = jwt_handler.is_jwt(token=api_key)
             verbose_proxy_logger.debug("is_jwt: %s", is_jwt)
             if is_jwt:
-                from litellm.proxy.proxy_server import premium_user
-
-                if premium_user is not True:
-                    raise ProxyException(
-                        message=f"JWT Auth is an enterprise only feature. {CommonProxyErrors.not_premium_user.value}",
-                        type=ProxyErrorTypes.auth_error,
-                        param="premium_user",
-                        code=status.HTTP_403_FORBIDDEN,
-                    )
                 # Try JWT-to-Virtual-Key mapping first to avoid
                 # unnecessary DB queries in auth_builder
                 do_standard_jwt_auth = True

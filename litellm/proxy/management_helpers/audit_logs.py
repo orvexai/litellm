@@ -36,9 +36,7 @@ def is_audit_logging_enabled(store_audit_logs: bool | None = None) -> bool:
     if environment_value is not None:
         return environment_value
 
-    from litellm.proxy.proxy_server import premium_user
-
-    return premium_user is True
+    return True
 
 
 def _allows_litellm_changed_by_header(user_api_key_dict: UserAPIKeyAuth) -> bool:
@@ -281,10 +279,7 @@ async def create_audit_log_for_update(request_data: LiteLLM_AuditLogs):
     if not is_audit_logging_enabled():
         return
 
-    from litellm.proxy.proxy_server import premium_user, prisma_client
-
-    if premium_user is not True:
-        return
+    from litellm.proxy.proxy_server import prisma_client
 
     verbose_proxy_logger.debug("creating audit log for %s", request_data)
     encoded: Final = _json_encoded(request_data)
@@ -312,10 +307,7 @@ async def create_audit_logs_for_updates(rows: Sequence[LiteLLM_AuditLogs]) -> No
     if not rows or not is_audit_logging_enabled():
         return
 
-    from litellm.proxy.proxy_server import premium_user, prisma_client
-
-    if premium_user is not True:
-        return
+    from litellm.proxy.proxy_server import prisma_client
 
     encoded: Final = tuple(_json_encoded(row) for row in rows)
     for row in encoded:
