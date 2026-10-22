@@ -1,0 +1,132 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: litellm-build
+  namespace: tekton-pipelines
+  labels:
+    app.kubernetes.io/part-of: litellm-fork
+spec:
+  description: |
+    Build and push the LiteLLM runtime image from the orvexai/litellm fork, then
+    pin the new tag in orvexai/my-idp platform/apps/litellm so ArgoCD rolls it out.
+  params:
+    - name: repo-url
+      type: string
+      default: https://github.com/orvexai/litellm.git
+    - name: revision
+      type: string
+      default: main
+    - name: image-registry
+      type: string
+      default: repos-direct.eu-central-1.myidp.cloud
+    - name: image-namespace
+      type: string
+      default: litellm
+    - name: image-tag
+      type: string
+      default: orvex
+    - name: deploy
+      type: string
+      default: "true"
+      description: Pin the built tag in my-idp when "true"
+  results:
+    - name: IMAGE_DIGEST
+      value: $(tasks.build-and-push.results.IMAGE_DIGEST)
+    - name: IMAGE_URL
+      value: $(tasks.build-and-push.results.IMAGE_URL)
+  tasks:
+    - name: clone-repo
+      taskRef:
+        kind: Task
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: build-and-push
+      runAfter: [clone-repo]
+      taskRef:
+        kind: Task
+        name: buildah-with-args
+      params:
+        - name: IMAGE
+          value: $(params.image-registry)/$(params.image-namespace)/litellm:$(params.image-tag)
+        - name: DOCKERFILE
+          value: ./Dockerfile
+        - name: CONTEXT
+          value: .
+        - name: TLS_VERIFY
+          value: "false"
+      workspaces:
+        - name: source
+          workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
+    - name: pin-gitops
+      runAfter: [build-and-push]
+      when:
+        - input: $(params.deploy)
+          operator: in
+          values: ["true"]
+      params:
+        - name: tag
+          value: $(params.image-tag)
+        - name: repository
+          value: repos.eu-central-1.myidp.cloud/$(params.image-namespace)/litellm
+      workspaces:
+        - name: gitops-credentials
+          workspace: gitops-credentials
+      taskSpec:
+        params:
+          - name: tag
+          - name: repository
+        workspaces:
+          - name: gitops-credentials
+        steps:
+          - name: pin
+            image: alpine/git:2.47.2
+            env:
+              - name: TAG
+                value: $(params.tag)
+              - name: REPOSITORY
+                value: $(params.repository)
+            script: |
+              #!/bin/sh
+              set -eu
+              TOKEN_FILE="$(workspaces.gitops-credentials.path)/token"
+              [ -s "$TOKEN_FILE" ] || { echo "Missing token in gitops credentials" >&2; exit 1; }
+              AUTH="$(printf 'x-access-token:%s' "$(cat "$TOKEN_FILE")" | base64 | tr -d '\n')"
+              TARGET=platform/apps/litellm/values.yaml
+              WORK="$(mktemp -d)"
+              git -c "http.extraHeader=Authorization: Basic ${AUTH}" clone --depth 1 --branch main \
+                https://github.com/orvexai/my-idp.git "$WORK"
+              cd "$WORK"
+              git config user.name litellm-ci
+              git config user.email litellm-ci@orvex.ai
+              attempt=1
+              while [ "$attempt" -le 5 ]; do
+                sed -i -E "/^image:/,/^  pullPolicy:/{s|^  repository:.*|  repository: ${REPOSITORY}|;s|^  tag:.*|  tag: \"${TAG}\"|}" "$TARGET"
+                if git diff --quiet -- "$TARGET"; then
+                  echo "my-idp already pins ${REPOSITORY}:${TAG}"
+                  exit 0
+                fi
+                git add -- "$TARGET"
+                git commit -q -m "chore(litellm): deploy ${TAG}"
+                if git -c "http.extraHeader=Authorization: Basic ${AUTH}" push origin HEAD:main; then
+                  echo "Pinned ${REPOSITORY}:${TAG} in my-idp"
+                  exit 0
+                fi
+                git -c "http.extraHeader=Authorization: Basic ${AUTH}" fetch origin main
+                git reset -q --hard origin/main
+                attempt=$((attempt + 1))
+              done
+              echo "Could not push the pin after 5 attempts" >&2
+              exit 1
+  workspaces:
+    - name: source
+    - name: dockerconfig
+    - name: gitops-credentials

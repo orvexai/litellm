@@ -1,0 +1,10 @@
+# Orvex CI for the orvexai/litellm fork, synced into tekton-pipelines by
+# my-idp-apps applications/eu-central-1/litellm-ci.yaml.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tekton-pipelines
+
+resources:
+  - litellm-build-pipeline.yaml
+  - trigger.yaml

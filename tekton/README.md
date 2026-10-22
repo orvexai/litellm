@@ -1,22 +1,9 @@
-# Tekton build
+# Tekton build and deploy
 
-Builds the `runtime` image from the root `Dockerfile` on every push to the fork and pushes it to `ghcr.io/orvexai/litellm:<first 12 chars of the commit sha>`.
+A push to `main` builds the root `Dockerfile` (`runtime` stage) with the shared `buildah-with-args` Task and pushes it to `repos.eu-central-1.myidp.cloud/litellm/litellm:orvex-<first 12 of the commit sha>`. The `litellm` Harbor project is public so the chart needs no pull secret.
 
-Pushes to `main` also deploy that image with `helm upgrade --install` using the `helm/litellm-helm` chart. The release is called `litellm` in the `litellm` namespace and keeps its existing values through `--reuse-values`. The upgrade is `--atomic`, so a failed rollout rolls back. Other branches only build.
+After the build, the `pin-gitops` task sets `image.repository` and `image.tag` in `orvexai/my-idp` `platform/apps/litellm/values.yaml`. ArgoCD then rolls the `litellm` app out.
 
-The Dockerfile relies on BuildKit features, so the build step runs rootless BuildKit instead of Kaniko or Buildah.
+`orvexai/my-idp-apps` `applications/eu-central-1/litellm-ci.yaml` syncs this directory into `tekton-pipelines`. The Trigger is picked up by the platform `github-webhook-listener` through the `ci.my-idp/discover` label, so no webhook or EventListener lives here.
 
-Prerequisites on the cluster are Tekton Pipelines and Tekton Triggers, with the `github` and `cel` interceptors installed.
-
-```bash
-kubectl create secret generic github-webhook-secret --from-literal=secret="$(openssl rand -hex 20)"
-kubectl create secret generic registry-credentials \
-  --from-file=config.json=$HOME/.docker/config.json
-kubectl apply -f tekton/pipeline.yaml -f tekton/triggers.yaml -f tekton/deploy-rbac.yaml
-```
-
-The manifests assume the Tekton resources live in the `default` namespace and the app in the `litellm` namespace. If yours differ, change the subject namespace in `deploy-rbac.yaml` and the `release` and `namespace` params in `pipeline.yaml`. The cluster also needs an image pull secret for ghcr.io if the package is private.
-
-Expose the `el-litellm-github` service through an Ingress, then add a GitHub webhook pointing at it. Use the content type `application/json`, only the push event, and the same secret as `github-webhook-secret`.
-
-To change the registry, edit the `image` param in the `litellm-build` TriggerTemplate.
+To build without deploying, run the Pipeline by hand with `deploy=false`.
