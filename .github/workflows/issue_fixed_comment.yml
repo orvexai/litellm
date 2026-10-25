@@ -1,26 +1,21 @@
 name: Issue fixed comment
 
 on:
-  issues:
-    types: [closed]
+  pull_request:
+    paths:
+    - .github/workflows/issue_fixed_comment.yml
+    - scripts/comment-fixed-issue.ts
+    - scripts/comment-fixed-issue.test.ts
+    - scripts/auto-close-duplicates.ts
   workflow_dispatch:
     inputs:
       issue_number:
-        description: "Closed issue number to comment on and close the superseded pull requests of. Ignored by a sweep."
+        description: Closed issue number to comment on and close the superseded pull requests of. Ignored by a sweep.
         required: false
       sweep:
-        description: "Close every open pull request whose linked issues were all fixed on the default branch. Reads every open pull request, so run it at most once an hour."
+        description: Close every open pull request whose linked issues were all fixed on the default branch. Reads every open pull request, so run it at most once an hour.
         type: boolean
         default: false
-  pull_request:
-    paths:
-      - .github/workflows/issue_fixed_comment.yml
-      - scripts/comment-fixed-issue.ts
-      - scripts/comment-fixed-issue.test.ts
-      - scripts/auto-close-duplicates.ts
-
-permissions: {}
-
 concurrency:
   group: issue-fixed-comment-${{ github.event.issue.number || github.event.inputs.issue_number || github.run_id }}
   cancel-in-progress: false

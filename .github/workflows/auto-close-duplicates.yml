@@ -1,8 +1,11 @@
 name: Auto-close duplicate issues
 
 on:
-  schedule:
-    - cron: "0 9 * * *"
+  pull_request:
+    paths:
+    - .github/workflows/auto-close-duplicates.yml
+    - scripts/auto-close-duplicates.ts
+    - scripts/auto-close-duplicates.test.ts
   workflow_dispatch:
     inputs:
       dry_run:
@@ -13,14 +16,6 @@ on:
         description: Days a duplicate notice must go unanswered before the close
         type: number
         default: 3
-  pull_request:
-    paths:
-      - .github/workflows/auto-close-duplicates.yml
-      - scripts/auto-close-duplicates.ts
-      - scripts/auto-close-duplicates.test.ts
-
-permissions: {}
-
 jobs:
   sweep-tests:
     if: github.event_name == 'pull_request'

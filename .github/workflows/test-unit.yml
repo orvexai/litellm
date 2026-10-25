@@ -3,13 +3,9 @@ name: unit
 on:
   pull_request:
     branches:
-      - main
-      - "litellm_**"
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
+    - main
+    - litellm_**
+  workflow_dispatch: null
 permissions:
   contents: read
 

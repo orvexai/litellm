@@ -3,14 +3,9 @@ name: OSV Scan
 on:
   pull_request:
     branches:
-      - main
-      - "litellm_**"
-  schedule:
-    - cron: "23 6 * * *"
-  workflow_dispatch:
-
-permissions: {}
-
+    - main
+    - litellm_**
+  workflow_dispatch: null
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true

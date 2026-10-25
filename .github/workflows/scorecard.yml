@@ -1,14 +1,7 @@
 name: Scorecard supply-chain security
 
 on:
-  branch_protection_rule:
-  schedule:
-    - cron: '27 12 * * 4'
-  push:
-    branches: ["main"]
-
-permissions: read-all
-
+  workflow_dispatch: null
 jobs:
   analysis:
     name: Scorecard analysis

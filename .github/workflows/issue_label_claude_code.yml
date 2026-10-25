@@ -1,11 +1,7 @@
 name: Issue label claude code
 
 on:
-  issues:
-    types: [opened]
-
-permissions: {}
-
+  workflow_dispatch: null
 jobs:
   label-claude-code:
     if: github.repository == 'BerriAI/litellm' && contains(github.event.issue.body, 'claude code')
