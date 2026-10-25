@@ -36,6 +36,8 @@ spec:
             value: $(tt.params.git-revision)
           - name: image-tag
             value: $(tt.params.image-tag)
+          - name: deploy
+            value: "false"
         taskRunTemplate:
           serviceAccountName: tekton-smoke-test-builder
           podTemplate:
