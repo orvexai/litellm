@@ -1,11 +1,7 @@
 name: Deploy main to gateway-dev
 
 on:
-  push:
-    branches: [main]
-
-permissions: {}
-
+  workflow_dispatch: null
 concurrency:
   group: deploy-dev-dispatch
   cancel-in-progress: true

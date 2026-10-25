@@ -1,27 +1,19 @@
 name: Issue label sync
 
 on:
-  push:
-    branches: [main]
+  pull_request:
     paths:
-      - .github/issue-labels.json
-      - scripts/sync-issue-labels.ts
+    - .github/workflows/issue_label_sync.yml
+    - .github/issue-labels.json
+    - scripts/sync-issue-labels.ts
+    - scripts/sync-issue-labels.test.ts
+    - scripts/issue-labels.ts
   workflow_dispatch:
     inputs:
       dry_run:
         description: Log which labels would be created or recoloured without touching anything
         type: boolean
         default: true
-  pull_request:
-    paths:
-      - .github/workflows/issue_label_sync.yml
-      - .github/issue-labels.json
-      - scripts/sync-issue-labels.ts
-      - scripts/sync-issue-labels.test.ts
-      - scripts/issue-labels.ts
-
-permissions: {}
-
 jobs:
   sync-issue-labels-tests:
     if: github.event_name == 'pull_request'

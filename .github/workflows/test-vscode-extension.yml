@@ -5,18 +5,11 @@ permissions:
 on:
   pull_request:
     branches:
-      - main
-      - "litellm_**"
+    - main
+    - litellm_**
     paths:
-      - "vscode-extension/**"
-      - ".github/workflows/test-vscode-extension.yml"
-  push:
-    branches:
-      - main
-    paths:
-      - "vscode-extension/**"
-      - ".github/workflows/test-vscode-extension.yml"
-
+    - vscode-extension/**
+    - .github/workflows/test-vscode-extension.yml
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

@@ -1,31 +1,25 @@
 name: Issue classifier
 
 on:
-  issues:
-    types: [opened, edited]
+  pull_request:
+    paths:
+    - .github/workflows/issue_classifier.yml
+    - .github/prompts/issue-classifier.md
+    - .github/prompts/issue-classifier.schema.json
+    - .github/issue-labels.json
+    - .github/ISSUE_TEMPLATE/bug_report.yml
+    - .github/ISSUE_TEMPLATE/feature_request.yml
+    - scripts/classify-issue.ts
+    - scripts/classify-issue.test.ts
+    - scripts/label-issue.ts
+    - scripts/label-issue.test.ts
+    - scripts/issue-labels.ts
+    - scripts/auto-close-duplicates.ts
   workflow_dispatch:
     inputs:
       issue_number:
-        description: "Issue number to classify manually."
+        description: Issue number to classify manually.
         required: true
-  pull_request:
-    paths:
-      - .github/workflows/issue_classifier.yml
-      - .github/prompts/issue-classifier.md
-      - .github/prompts/issue-classifier.schema.json
-      - .github/issue-labels.json
-      - .github/ISSUE_TEMPLATE/bug_report.yml
-      - .github/ISSUE_TEMPLATE/feature_request.yml
-      - scripts/classify-issue.ts
-      - scripts/classify-issue.test.ts
-      - scripts/label-issue.ts
-      - scripts/label-issue.test.ts
-      - scripts/issue-labels.ts
-      - scripts/auto-close-duplicates.ts
-
-permissions: {}
-
-# Runs for one issue queue instead of cancelling, so an edit during the first run never cuts the label step short
 concurrency:
   group: issue-classifier-${{ github.event.issue.number || github.event.inputs.issue_number || github.run_id }}
   cancel-in-progress: false

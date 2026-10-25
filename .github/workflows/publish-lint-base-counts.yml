@@ -9,15 +9,11 @@ name: Publish lint base counts
 # every sha's artifact matters (any of them can become a merge-base).
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       ref:
-        description: "Ref to compute and publish base counts for (defaults to the workflow run's commit)"
+        description: Ref to compute and publish base counts for (defaults to the workflow run's commit)
         required: false
-
 permissions:
   contents: read
 

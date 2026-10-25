@@ -1,24 +1,15 @@
 name: Linear Release
 
 on:
-  push:
-    branches:
-      - main
-      - "rc/**"
-  release:
-    types: [published]
   workflow_call:
     inputs:
       rc_version:
-        description: "X.Y.0 release whose rc branch was just cut"
+        description: X.Y.0 release whose rc branch was just cut
         required: true
         type: string
     secrets:
       LINEAR_API_KEY:
         required: true
-
-permissions: {}
-
 jobs:
   linear-release:
     name: Linear Release

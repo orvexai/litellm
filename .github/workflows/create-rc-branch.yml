@@ -1,13 +1,7 @@
 name: Create RC Branch
 
 on:
-  schedule:
-    - cron: "0 3 * * 5"
-      timezone: "America/Los_Angeles"
-  workflow_dispatch:
-
-permissions: {}
-
+  workflow_dispatch: null
 jobs:
   create-rc-branch:
     name: Create RC Branch

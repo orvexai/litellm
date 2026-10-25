@@ -1,24 +1,19 @@
 name: Duplicate issue check (Codex)
 
 on:
-  issues:
-    types: [opened]
+  pull_request:
+    paths:
+    - .github/workflows/duplicate_issue_check.yml
+    - .github/prompts/duplicate-issue-check.md
+    - .github/prompts/duplicate-issue-check.schema.json
+    - scripts/flag-duplicate-issue.ts
+    - scripts/flag-duplicate-issue.test.ts
+    - scripts/auto-close-duplicates.ts
   workflow_dispatch:
     inputs:
       issue_number:
-        description: "Issue number to check manually."
+        description: Issue number to check manually.
         required: true
-  pull_request:
-    paths:
-      - .github/workflows/duplicate_issue_check.yml
-      - .github/prompts/duplicate-issue-check.md
-      - .github/prompts/duplicate-issue-check.schema.json
-      - scripts/flag-duplicate-issue.ts
-      - scripts/flag-duplicate-issue.test.ts
-      - scripts/auto-close-duplicates.ts
-
-permissions: {}
-
 jobs:
   flag-tests:
     if: github.event_name == 'pull_request'

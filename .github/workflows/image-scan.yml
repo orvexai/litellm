@@ -3,43 +3,38 @@ name: Image Scan
 on:
   pull_request:
     branches:
-      - main
-      - litellm_oss_branch
-      - "litellm_**"
+    - main
+    - litellm_oss_branch
+    - litellm_**
     paths:
-      - Dockerfile
-      - docker/Dockerfile.non_root
-      - docker/Dockerfile.database
-      - migrations/Dockerfile
-      - migrations/run.py
-      - gateway/Dockerfile
-      - gateway/main.py
-      - gateway/routes/allowlist.py
-      - backend/Dockerfile
-      - backend/main.py
-      - litellm-rust/**
-      - litellm/proxy/lens/**
-      - docker/component_entrypoint.sh
-      - docker/entrypoint.sh
-      - litellm/proxy/prisma_migration.py
-      - litellm/proxy/admin_mcp.py
-      - litellm/proxy/proxy_server.py
-      - backend/routes/allowlist.py
-      - pyproject.toml
-      - litellm-proxy-extras/**
-      - tests/integration/database/image/**
-      - uv.lock
-      - ui/litellm-dashboard/package-lock.json
-      - ui/Dockerfile
-      - ui/nginx.conf
-      - .github/workflows/image-scan.yml
-      - .grype.yaml
-  schedule:
-    - cron: "41 6 * * *"
-  workflow_dispatch:
-
-permissions: {}
-
+    - Dockerfile
+    - docker/Dockerfile.non_root
+    - docker/Dockerfile.database
+    - migrations/Dockerfile
+    - migrations/run.py
+    - gateway/Dockerfile
+    - gateway/main.py
+    - gateway/routes/allowlist.py
+    - backend/Dockerfile
+    - backend/main.py
+    - litellm-rust/**
+    - litellm/proxy/lens/**
+    - docker/component_entrypoint.sh
+    - docker/entrypoint.sh
+    - litellm/proxy/prisma_migration.py
+    - litellm/proxy/admin_mcp.py
+    - litellm/proxy/proxy_server.py
+    - backend/routes/allowlist.py
+    - pyproject.toml
+    - litellm-proxy-extras/**
+    - tests/integration/database/image/**
+    - uv.lock
+    - ui/litellm-dashboard/package-lock.json
+    - ui/Dockerfile
+    - ui/nginx.conf
+    - .github/workflows/image-scan.yml
+    - .grype.yaml
+  workflow_dispatch: null
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true

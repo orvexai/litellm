@@ -1,11 +1,7 @@
 name: Cost map guard
 
-on: # zizmor: ignore[dangerous-triggers] runs the base branch's code only; the PR's cost map files are read as data and never executed
-  pull_request_target:
-    branches:
-      - main
-      - "litellm_**"
-
+on:
+  workflow_dispatch: null
 permissions:
   contents: read
 

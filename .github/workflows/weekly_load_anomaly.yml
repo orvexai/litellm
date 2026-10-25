@@ -1,10 +1,7 @@
 name: "Weekly Load Anomaly Check"
 
 on:
-  schedule:
-    - cron: "0 12 * * 6"
-  workflow_dispatch:
-
+  workflow_dispatch: null
 permissions:
   contents: read
 

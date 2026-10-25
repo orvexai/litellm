@@ -1,20 +1,14 @@
 name: Terraform Modules
 
 on:
-  push:
-    paths:
-      - "terraform/litellm/aws/**"
-      - "terraform/litellm/gcp/**"
-      - ".github/workflows/test-terraform-modules.yml"
   pull_request:
     branches:
-      - main
-      - "litellm_**"
+    - main
+    - litellm_**
     paths:
-      - "terraform/litellm/aws/**"
-      - "terraform/litellm/gcp/**"
-      - ".github/workflows/test-terraform-modules.yml"
-
+    - terraform/litellm/aws/**
+    - terraform/litellm/gcp/**
+    - .github/workflows/test-terraform-modules.yml
 permissions:
   contents: read
 
