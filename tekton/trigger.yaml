@@ -83,11 +83,12 @@ spec:
         kind: ClusterInterceptor
       params:
         - name: filter
-          value: "body.repository.full_name == 'orvexai/litellm' && body.ref == 'refs/heads/main' && !body.deleted"
+          value: >-
+            body.repository.full_name == 'orvexai/litellm' && body.ref.startsWith('refs/tags/') && body.deleted == false
         - name: overlays
           value:
             - key: image-tag
-              expression: "'orvex-' + body.after.truncate(12)"
+              expression: "'orvex-' + body.ref.replace('refs/tags/', '').replace('/', '-')"
   bindings:
     - ref: github-push-defaults
       kind: ClusterTriggerBinding
