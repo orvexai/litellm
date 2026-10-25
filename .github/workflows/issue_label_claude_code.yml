@@ -1,8 +1,7 @@
 name: Issue label claude code
 
 on:
-  issues:
-    types: [opened]
+  workflow_dispatch: {}
 
 permissions: {}
 
@@ -14,8 +13,8 @@ jobs:
     permissions:
       issues: write
     steps:
-      - name: Add the claude code label
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_URL: ${{ github.event.issue.html_url }}
-        run: gh issue edit "$ISSUE_URL" --add-label "claude code"
+    - name: Add the claude code label
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ISSUE_URL: ${{ github.event.issue.html_url }}
+      run: gh issue edit "$ISSUE_URL" --add-label "claude code"
